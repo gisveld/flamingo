@@ -41,11 +41,15 @@ import net.sourceforge.stripes.action.Resolution;
 import net.sourceforge.stripes.action.StreamingResolution;
 import net.sourceforge.stripes.action.StrictBinding;
 import net.sourceforge.stripes.action.UrlBinding;
+import net.sourceforge.stripes.tag.BeanFirstPopulationStrategy;
 import net.sourceforge.stripes.validation.SimpleError;
 import net.sourceforge.stripes.validation.Validate;
 import net.sourceforge.stripes.validation.ValidateNestedProperties;
+import net.sourceforge.stripes.validation.ValidationErrorHandler;
+import net.sourceforge.stripes.validation.ValidationErrors;
 import nl.b3p.viewer.config.CycloramaAccount;
 import nl.b3p.viewer.config.security.Group;
+import nl.b3p.web.stripes.CustomPopulationStrategy;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -62,6 +66,7 @@ import sun.security.rsa.RSAPrivateCrtKeyImpl;
 @UrlBinding("/action/cyclorama/{$event}")
 @StrictBinding
 @RolesAllowed({Group.ADMIN,Group.REGISTRY_ADMIN})
+@CustomPopulationStrategy(BeanFirstPopulationStrategy.class)
 public class CycloramaConfigurationActionBean implements ActionBean {
     private static final Log log = LogFactory.getLog(CycloramaConfigurationActionBean.class);
 
@@ -123,6 +128,14 @@ public class CycloramaConfigurationActionBean implements ActionBean {
     public Resolution view() {
         accounts = getAccountList();
         return new ForwardResolution(JSP);
+    }
+
+    public Resolution delete(){
+        EntityManager em = Stripersist.getEntityManager();
+        em.remove(account);
+        em.getTransaction().commit();
+        account = null;
+        return view();
     }
 
     public Resolution save() throws KeyStoreException {
