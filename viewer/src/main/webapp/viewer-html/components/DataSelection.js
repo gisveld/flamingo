@@ -44,7 +44,8 @@ Ext.define ("viewer.components.DataSelection",{
         details:{
             width: null,
             height:null
-        }
+        },
+        openAttributeListAfterFilter: true
     },
     constructor: function (conf){
         // minimal width = 600
@@ -484,6 +485,15 @@ Ext.define ("viewer.components.DataSelection",{
             });
             this.config.viewerController.setFilter(filterWrapper,layer);
         }
+
+        if(!this.config.openAttributeListAfterFilter) {
+            return;
+        }
+        var attributeListComponents = this.config.viewerController.getComponentsByClassName("viewer.components.AttributeList");
+        if(attributeListComponents.length === 0) {
+            return;
+        }
+        attributeListComponents[0].showWindowForLayer(layer);
         
         // console.log("CQL: " + layer.filter.getCQL());
     },

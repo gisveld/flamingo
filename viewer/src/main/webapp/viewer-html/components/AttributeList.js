@@ -34,7 +34,8 @@ Ext.define ("viewer.components.AttributeList",{
         label: "",
         defaultDownload: "SHP",
         autoDownload: false,
-        downloadParams: ""
+        downloadParams: "",
+        addZoomTo: true
     },
     appLayer: null,
     featureService: null,
@@ -213,6 +214,16 @@ Ext.define ("viewer.components.AttributeList",{
             this.loadWindow();
         }
         this.popup.show();
+    },
+    showWindowForLayer: function(layer) {
+        this.showWindow();
+        var listener = this.layerSelector.addListener(viewer.viewercontroller.controller.Event.ON_LAYERSELECTOR_INITLAYERS, function() {
+            if(this.layerSelector.hasValue(layer)) {
+                this.layerSelector.setValue(layer);
+            }
+            listener.destroy();
+        }, this, { destroyable: true });
+        this.layerSelector.initLayers();
     },
     clear: function() {
         for(var gridId in this.grids) {
@@ -397,8 +408,12 @@ Ext.define ("viewer.components.AttributeList",{
         var attributeList = new Array();
         var columns = new Array();
         var index = 0;
+        var hasGeometry = false;
         for(var i= 0 ; i < attributes.length ;i++){
             var attribute = attributes[i];
+            if(attribute.type === "geometry") {
+                hasGeometry = true;
+            }
             if(attribute.visible){
 
                 var attIndex = index++;
@@ -417,6 +432,21 @@ Ext.define ("viewer.components.AttributeList",{
                     }
                 });
             }
+        }
+        if(hasGeometry && this.config.addZoomTo) {
+            attributeList.unshift({
+                name: "__fid",
+                type: "string"
+            });
+            columns.unshift({
+                header: "Zoom",
+                dataIndex: "__fid",
+                sortable: false,
+                width: 24,
+                renderer: function(fid) {
+                    return ['<a href="#" class="x-form-search-trigger" data-fid="', fid, '">z</a>'].join("");
+                }
+            })
         }
         var modelName = name + appLayer.id + 'Model';
         if (!this.schema.hasEntity(modelName)) {
