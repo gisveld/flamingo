@@ -42,6 +42,7 @@ Ext.define ("viewer.components.AttributeList",{
     layerSelector:null,
     topContainer: null,
     schema: null,
+    featureExtendService: null,
     constructor: function (conf){
         var minwidth = 600;
         if(conf.details.width < minwidth || !Ext.isDefined(conf.details.width)) conf.details.width = minwidth;
@@ -409,9 +410,10 @@ Ext.define ("viewer.components.AttributeList",{
         var columns = new Array();
         var index = 0;
         var hasGeometry = false;
+        var geometryTypes = ["geometry", "point", "multipoint", "linestring", "multilinestring", "polygon", "multipolygon"];
         for(var i= 0 ; i < attributes.length ;i++){
             var attribute = attributes[i];
-            if(attribute.type === "geometry") {
+            if(geometryTypes.indexOf(attribute.type) !== -1) {
                 hasGeometry = true;
             }
             if(attribute.visible){
@@ -443,10 +445,11 @@ Ext.define ("viewer.components.AttributeList",{
                 dataIndex: "__fid",
                 sortable: false,
                 width: 24,
+                tdCls: 'zoom-to-feature',
                 renderer: function(fid) {
-                    return ['<a href="#" class="x-form-search-trigger" data-fid="', fid, '">z</a>'].join("");
+                    return '<a href="#" class="x-grid-filters-icon x-grid-filters-find"></a>';
                 }
-            })
+            });
         }
         var modelName = name + appLayer.id + 'Model';
         if (!this.schema.hasEntity(modelName)) {
@@ -582,6 +585,30 @@ Ext.define ("viewer.components.AttributeList",{
                 ]
             });
         }
+        var listeners = {
+            expandbody : {
+                scope: me,
+                fn: function(rowNode,record,expandRow,eOpts,recordIndex){
+                    this.onExpandRow(rowNode,record,expandRow,eOpts,recordIndex);
+                }
+            },
+            collapsebody: {
+                scope: me,
+                fn: function(rowNode,record,expandRow,eOpts,recordIndex){
+                    this.onCollapseBody(rowNode,record,expandRow,eOpts,recordIndex);
+                }
+            }
+        };
+        if(hasGeometry && this.config.addZoomTo) {
+            listeners.cellclick = {
+                scope: me,
+                fn: function(grid, td, cellIdx, record) {
+                    if((td.className || "").indexOf("zoom-to-feature") !== -1) {
+                        this.zoomToFeature(record.getData());
+                    }
+                }
+            };
+        }
         var g = Ext.create('Ext.grid.Panel',  {
             id: name + 'Grid',
             store: store,
@@ -590,20 +617,7 @@ Ext.define ("viewer.components.AttributeList",{
             viewConfig:{
                 trackOver: false,
                 enableMouseOverOverrideFix: true, // custom configuration option used in override below
-                listeners: {
-                    expandbody : {
-                        scope: me,
-                        fn: function(rowNode,record,expandRow,eOpts,recordIndex){
-                            this.onExpandRow(rowNode,record,expandRow,eOpts,recordIndex);
-                        }
-                    },
-                    collapsebody: {
-                        scope: me,
-                        fn: function(rowNode,record,expandRow,eOpts,recordIndex){
-                            this.onCollapseBody(rowNode,record,expandRow,eOpts,recordIndex);
-                        }
-                    }
-                }
+                listeners: listeners
             }
         });
         Ext.getCmp(name + 'GridPanel').add(g);
@@ -627,6 +641,21 @@ Ext.define ("viewer.components.AttributeList",{
             Ext.getCmp(name + 'PagerPanel').add(p);
             this.pagers[gridId]=p;
         }
+    },
+    zoomToFeature: function(feature) {
+        if(this.featureExtendService === null) {
+            this.featureExtendService = Ext.create('viewer.FeatureExtent');
+        }
+        this.featureExtendService.getExtendForFeatures(
+            /*featureIds=*/feature.__fid,
+            /*appLayer=*/this.layerSelector.getValue(),
+            /*successFn=*/(function(extent) {
+                this.config.viewerController.mapComponent.getMap().zoomToExtent(extent);
+            }).bind(this),
+            /*failedFn=*/function(msg) {
+                console.log(msg);
+            }
+        );
     },
     download : function(){
         var appLayer = this.appLayer;

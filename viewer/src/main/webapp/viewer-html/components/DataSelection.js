@@ -163,7 +163,12 @@ Ext.define ("viewer.components.DataSelection",{
                     listeners: {
                         click:{
                             scope: this,
-                            fn: this.applyFilter
+                            fn: function() {
+                                this.applyFilter();
+                                if(this.config.openAttributeListAfterFilter) {
+                                    this.openAttributeList();
+                                }
+                            }
                         }
                     }
                 },{
@@ -485,17 +490,18 @@ Ext.define ("viewer.components.DataSelection",{
             });
             this.config.viewerController.setFilter(filterWrapper,layer);
         }
-
+        // console.log("CQL: " + layer.filter.getCQL());
+    },
+    openAttributeList: function() {
         if(!this.config.openAttributeListAfterFilter) {
             return;
         }
+        var layer = this.layerSelector.getValue();
         var attributeListComponents = this.config.viewerController.getComponentsByClassName("viewer.components.AttributeList");
         if(attributeListComponents.length === 0) {
             return;
         }
         attributeListComponents[0].showWindowForLayer(layer);
-        
-        // console.log("CQL: " + layer.filter.getCQL());
     },
     getDataTabCQL : function (){
         var items = this.dataTab.items.items;
