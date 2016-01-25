@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2013 B3Partners B.V.
+ * Copyright (C) 2012-2016 B3Partners B.V.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ Ext.define ("viewer.components.AttributeList",{
     layerSelector:null,
     topContainer: null,
     schema: null,
-    featureExtendService: null,
+    featureExtentService: null,
     constructor: function (conf){
         var minwidth = 600;
         if(conf.details.width < minwidth || !Ext.isDefined(conf.details.width)) conf.details.width = minwidth;
@@ -643,14 +643,15 @@ Ext.define ("viewer.components.AttributeList",{
         }
     },
     zoomToFeature: function(feature) {
-        if(this.featureExtendService === null) {
-            this.featureExtendService = Ext.create('viewer.FeatureExtent');
+        if (this.featureExtentService === null) {
+            this.featureExtentService = Ext.create('viewer.FeatureExtent');
         }
-        this.featureExtendService.getExtendForFeatures(
+        this.featureExtentService.getExtentForFeatures(
             /*featureIds=*/feature.__fid,
             /*appLayer=*/this.layerSelector.getValue(),
-            /*successFn=*/(function(extent) {
-                this.config.viewerController.mapComponent.getMap().zoomToExtent(extent);
+                /*successFn=*/(function (extent) {
+                    var e = Ext.create("viewer.viewercontroller.controller.Extent", extent.minx, extent.miny, extent.maxx, extent.maxy);
+                    this.config.viewerController.mapComponent.getMap().zoomToExtent(e);
             }).bind(this),
             /*failedFn=*/function(msg) {
                 console.log(msg);

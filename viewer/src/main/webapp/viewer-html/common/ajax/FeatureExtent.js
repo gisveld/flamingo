@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2016 B3Partners B.V.
+ * Copyright (C) 2016 B3Partners B.V.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,30 +22,32 @@ Ext.define("viewer.FeatureExtent", {
     constructor: function(config) {
         this.initConfig(config);
         if(this.config.actionbeanUrl === null) {
-            this.config.actionbeanUrl = actionBeans["featureExtend"];
+            this.config.actionbeanUrl = actionBeans["featureExtent"];
         }
     },
-    getExtendForFeatures: function(featureIds, appLayer, successFn, failedFn) {
+    getExtentForFeatures: function (featureIds, appLayer, successFn, failedFn) {
         if(!Ext.isArray(featureIds)) {
             featureIds = [featureIds];
         }
-        var filter = ["IN (", featureIds.join(","), ")"].join("");
+        var filter = ["IN ('", featureIds.join("','"), "')"].join("");
         this._doRequest(filter, appLayer, successFn, failedFn);
     },
-    getExtendForFilter: function(filter, appLayer, successFn, failedFn) {
+    getExtentForFilter: function (filter, appLayer, successFn, failedFn) {
         this._doRequest(filter, appLayer, successFn, failedFn);
     },
     _doRequest: function(filter, appLayer, successFunction, failureFunction) {
         Ext.Ajax.request({
             url: this.config.actionbeanUrl,
             params: {
+                //TODO min. extent size x/y dimensions in map units, eg. meter
+                minSize: 100,
                 filter: filter,
                 appLayer: appLayer.id
             },
             success: function(result) {
                 var response = Ext.JSON.decode(result.responseText);
                 if(response.success) {
-                    successFunction(response.extend);
+                    successFunction(response.extent);
                 } else if(typeof failureFunction !== "undefined") {
                     failureFunction(response.error);
                 }
