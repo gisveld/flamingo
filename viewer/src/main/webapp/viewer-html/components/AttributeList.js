@@ -35,7 +35,8 @@ Ext.define ("viewer.components.AttributeList",{
         defaultDownload: "SHP",
         autoDownload: false,
         downloadParams: "",
-        addZoomTo: true
+        addZoomTo: true,
+        zoomToSize: 100
     },
     appLayer: null,
     featureService: null,
@@ -647,8 +648,9 @@ Ext.define ("viewer.components.AttributeList",{
             this.featureExtentService = Ext.create('viewer.FeatureExtent');
         }
         this.featureExtentService.getExtentForFeatures(
-            /*featureIds=*/feature.__fid,
-            /*appLayer=*/this.layerSelector.getValue(),
+                /*featureIds=*/feature.__fid,
+                /*appLayer=*/this.layerSelector.getValue(),
+                this.config.zoomToSize,
                 /*successFn=*/(function (extent) {
                     var e = Ext.create("viewer.viewercontroller.controller.Extent", extent.minx, extent.miny, extent.maxx, extent.maxy);
                     this.config.viewerController.mapComponent.getMap().zoomToExtent(e);

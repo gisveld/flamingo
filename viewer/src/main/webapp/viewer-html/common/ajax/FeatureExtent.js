@@ -25,22 +25,21 @@ Ext.define("viewer.FeatureExtent", {
             this.config.actionbeanUrl = actionBeans["featureExtent"];
         }
     },
-    getExtentForFeatures: function (featureIds, appLayer, successFn, failedFn) {
+    getExtentForFeatures: function (featureIds, appLayer, minSize, successFn, failedFn) {
         if(!Ext.isArray(featureIds)) {
             featureIds = [featureIds];
         }
         var filter = ["IN ('", featureIds.join("','"), "')"].join("");
-        this._doRequest(filter, appLayer, successFn, failedFn);
+        this._doRequest(filter, appLayer, minSize, successFn, failedFn);
     },
-    getExtentForFilter: function (filter, appLayer, successFn, failedFn) {
-        this._doRequest(filter, appLayer, successFn, failedFn);
+    getExtentForFilter: function (filter, appLayer, minSize, successFn, failedFn) {
+        this._doRequest(filter, appLayer, minSize, successFn, failedFn);
     },
-    _doRequest: function(filter, appLayer, successFunction, failureFunction) {
+    _doRequest: function (filter, appLayer, minSize, successFunction, failureFunction) {
         Ext.Ajax.request({
             url: this.config.actionbeanUrl,
             params: {
-                //TODO min. extent size x/y dimensions in map units, eg. meter
-                minSize: 100,
+                minSize: minSize,
                 filter: filter,
                 appLayer: appLayer.id
             },
