@@ -683,15 +683,22 @@ Ext.define ("viewer.components.AttributeList",{
         if (this.featureExtentService === null) {
             this.featureExtentService = Ext.create('viewer.FeatureExtent');
         }
-        this.featureExtentService.getExtentForFilter(
-                /*filter=*/appLayer.filter ? appLayer.filter.getCQL() : "",
-                /*appLayer=*/appLayer,
-                this.config.zoomToSize,
-                /*successFn=*/(function (extent) {
-                    var e = Ext.create("viewer.viewercontroller.controller.Extent", extent.minx, extent.miny, extent.maxx, extent.maxy);
-                    this.config.viewerController.mapComponent.getMap().zoomToExtent(e);
+
+        var store =  this.grids.main.store;
+        var ids = [];
+        store.each(function(feature){
+            ids.push(feature.data.__fid);
+        });
+
+        this.featureExtentService.getExtentForFeatures(
+             ids,
+             this.layerSelector.getValue(),
+             this.config.zoomToSize,
+             (function (extent) {
+                 var e = Ext.create("viewer.viewercontroller.controller.Extent", extent.minx, extent.miny, extent.maxx, extent.maxy);
+                 this.config.viewerController.mapComponent.getMap().zoomToExtent(e);
             }).bind(this),
-            /*failedFn=*/function(msg) {
+            function(msg) {
                 console.log(msg);
             }
         );
