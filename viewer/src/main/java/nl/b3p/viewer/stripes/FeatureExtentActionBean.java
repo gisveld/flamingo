@@ -41,6 +41,7 @@ import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.filter.text.ecql.ECQL;
+import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -82,6 +83,12 @@ public class FeatureExtentActionBean implements ActionBean {
      */
     @Validate
     private int minSize;
+
+    /**
+     * Buffer distance in mapping units.
+     */
+    @Validate
+    private int buffer;
 
     private Layer layer;
     private boolean unauthorized;
@@ -162,7 +169,8 @@ public class FeatureExtentActionBean implements ActionBean {
 
         if (extent.getSpan(0) < minSize || extent.getSpan(1) < minSize) {
             // buffer the extent if smaller than the limit eg. a single point or line
-            log.debug("buffering extent by: " + minSize);
+            // a point does not have extents, so we need to use the point itself to construct a buffer
+            log.debug("enlarging extent by: " + minSize);
             try (SimpleFeatureIterator sfi = feats.features()) {
                 if (sfi.hasNext()) {
                     SimpleFeature sf = sfi.next();
@@ -174,10 +182,23 @@ public class FeatureExtentActionBean implements ActionBean {
                 }
             }
         }
+        if (buffer > 0) {
+            log.debug("enlarging extent using buffer by: " + buffer);
+            Geometry geom = JTS.toGeometry(extent).buffer(buffer);
+            extent = new ReferencedEnvelope(geom.getEnvelopeInternal(), extent.getCoordinateReferenceSystem());
+        }
         return extent;
     }
 
     //<editor-fold defaultstate="collapsed" desc="getters and setters">
+    public int getBuffer() {
+        return buffer;
+    }
+
+    public void setBuffer(int buffer) {
+        this.buffer = buffer;
+    }
+
     public String getFilter() {
         return filter;
     }

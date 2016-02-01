@@ -25,24 +25,25 @@ Ext.define("viewer.FeatureExtent", {
             this.config.actionbeanUrl = actionBeans["featureExtent"];
         }
     },
-    getExtentForFeatures: function (featureIds, appLayer, minSize, successFn, failedFn) {
+    getExtentForFeatures: function (featureIds, appLayer, minSize, buffer, successFn, failedFn) {
         if(!Ext.isArray(featureIds)) {
             featureIds = [featureIds];
         }
         var filter = ["IN ('", featureIds.join("','"), "')"].join("");
-        this._doRequest(filter, appLayer, minSize, successFn, failedFn);
+        this._doRequest(filter, appLayer, minSize, buffer, successFn, failedFn);
     },
-    getExtentForFilter: function (filter, appLayer, minSize, successFn, failedFn) {
+    getExtentForFilter: function (filter, appLayer, minSize, buffer, successFn, failedFn) {
         if(filter === "") {
-            // Get all features? How?
+            filter = "include";
         }
-        this._doRequest(filter, appLayer, minSize, successFn, failedFn);
+        this._doRequest(filter, appLayer, minSize, buffer, successFn, failedFn);
     },
-    _doRequest: function (filter, appLayer, minSize, successFunction, failureFunction) {
+    _doRequest: function (filter, appLayer, minSize, buffer, successFunction, failureFunction) {
         Ext.Ajax.request({
             url: this.config.actionbeanUrl,
             params: {
                 minSize: minSize,
+                buffer: buffer,
                 filter: filter,
                 appLayer: appLayer.id
             },
